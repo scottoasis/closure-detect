@@ -1,0 +1,187 @@
+#+TITLE: Detecting Closures In A Bit Map
+#+AUTHOR: Scott Wang
+#+EMAIL: scott.wang@theweflex.com
+#+STARTUP: align indent
+#+LANGUAGE: en
+#+PROPERTY: header-args :mkdirp true
+
+* Objectives
+
+This is a challenge (a interview question) repo. If you are
+considering joining [[https://github.com/weflex][WeFlex]], you can fork this repo, complete the quest
+and [[https://github.com/scottoasis/closure-detect/compare][submit a PullRequst]] back to me.
+
+
+** Languages Available
+
+At this moment, this quest is available in these programming languages:
+
+- [[https://github.com/scottoasis/closure-detect/blob/javascript/readme.org][Javascript]]
+- [[https://github.com/scottoasis/closure-detect/blob/java/readme.org][Java]]
+
+
+* The Quest
+
+You are working on a project dealing with ASCII texts. Each of these
+texts is an graphical image (=Glyph=), drew with ASCII
+characters. Characters, including white spaces, are known as =Pixels=,
+as they are very similar to pixels on LCD panels. [[dog.ascii][Below]] is an example
+of an image produced by anonymous artist. It is 15 chars wide and 6
+chars high.
+
+#+NAME: dog.ascii
+#+BEGIN_SRC picture :tangle test/fixtures/dog.ascii :exports code
+               
+     /|_.      
+    /    `-.   
+   /   .__/    
+   \___|       
+               
+#+END_SRC
+
+Your task in this project is to detect if its path is closed. If it is
+closed, we call it a =Closure=.
+
+
+** Is it a closure?
+
+A rectangle is a closure.
+
+#+BEGIN_SRC picture :tangle test/fixtures/rect.ascii :exports code
+ 
+ +-----+
+ |     |
+ |     |
+ +-----+
+       
+#+END_SRC
+
+A triangle is a closure.
+
+#+BEGIN_SRC picture :tangle test/fixtures/triangle.ascii :exports code
+
+    +
+   / \
+  /   \
+ +-----+
+        
+#+END_SRC
+
+But a short line is not a closure.
+
+#+BEGIN_SRC picture :tangle test/fixtures/line.ascii :exports code
+    
+  ++ 
+ 
+ #+END_SRC
+
+
+* Helpers
+
+We have already wrote a helper function to read and generate data
+structures you may need.
+
+Object =Glyph(fpath)= reads contents of file =fpath= and returns an
+Glyph object with =width=, =height= of the glyph and a method =charAt=
+you can use to get content of a glyph at given position =x, y=.
+
+#+BEGIN_src java :tangle lib/Glyph.java :exports code
+package lib;
+
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.io.IOException;
+
+public class Glyph {
+
+  public int width = 0;
+  public int height = 0;
+  int x = 0;
+  int y = 0;
+  byte[][] buffer;
+
+  public Glyph () {}
+
+  public Glyph (String fpath) {
+    byte [] buf;
+    int i;
+
+    buffer = new byte[80][80];
+    
+    try {
+      buf = Files.readAllBytes(Paths.get(fpath));
+      for (i = 0; i < buf.length; i++) {
+        byte ch = buf[i];
+        if (0x0a == ch) {
+          height++;
+          y = height -1;
+          width = (x > width) ? x : width;
+          x = 0;
+          buffer[y] = new byte[80];
+        }
+        else {
+          buffer[y][x] = ch;
+          x++;
+        }
+      }
+      width++;
+      height++;
+    }
+    catch (IOException e) {
+      // ignore ...
+    }
+  }
+
+  public char charAt (int x, int y) {
+    byte value = 0;
+
+    if (x < width && y < height) {
+      try {
+        value = buffer[y][x];
+      }
+      catch (Exception e) {
+        value = 0x20;
+      }
+      finally {
+        return (char)value;
+      }
+    }
+    else {
+      System.out.println("Request exceeds size of glyph");
+      return 0x0;
+    }
+  }
+
+  // ...
+
+#+END_SRC
+
+Your task is to modify the method body of =isClosure()= in
+=lib/Glyph.js=, make it return true when the =Glyph= object is a
+=Closure=.
+
+#+BEGIN_src java :tangle lib/Glyph.java :exports code
+// public class Glyph ...
+  public boolean isClosure () {
+
+    return false;
+  }
+}
+#+END_SRC
+
+
+* Running Test Cases
+
+To help you figure out if you had walking on the right path, we have
+also made a few test cases. To test your code, do
+
+#+BEGIN_SRC shell-script
+make test
+#+END_SRC
+
+or you can test it with =node= directly
+
+#+BEGIN_SRC shell-script
+javac Main.java && java Main
+#+END_SRC
+
